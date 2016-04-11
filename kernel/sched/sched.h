@@ -93,10 +93,10 @@ static inline int dl_policy(int policy)
 	return policy == SCHED_DEADLINE;
 }
 
-/*static inline int llf_policy(int policy)
+static inline int llf_policy(int policy)
 {
-	return policy == SCHED_LLF_DEADLINE;
-}*/
+	return policy == SCHED_LLF;
+}
 
 static inline int task_has_rt_policy(struct task_struct *p)
 {
@@ -512,7 +512,7 @@ struct dl_rq {
 
 struct llf_rq {
 	/* runqueue is an rbtree, ordered by deadline */
-	struct rb_root rb_root;
+	struct rb_root rb_root1;	//rb_root is called using the name rb_root1
 	struct rb_node *rb_leftmost;
 
 	unsigned long dl_nr_running;
@@ -623,7 +623,7 @@ struct rq {
 	struct cfs_rq cfs;
 	struct rt_rq rt;
 	struct dl_rq dl;
-	//struct llf_rq llf;
+	struct llf_rq llf;
 
 #ifdef CONFIG_FAIR_GROUP_SCHED
 	/* list of leaf cfs_rq on this cpu: */
@@ -1272,7 +1272,7 @@ static inline void put_prev_task(struct rq *rq, struct task_struct *prev)
 
 extern const struct sched_class stop_sched_class;
 extern const struct sched_class dl_sched_class;
-//extern const struct sched_class llf_sched_class;
+extern const struct sched_class llf_sched_class;
 extern const struct sched_class rt_sched_class;
 extern const struct sched_class fair_sched_class;
 extern const struct sched_class idle_sched_class;
@@ -1715,7 +1715,7 @@ extern void print_dl_stats(struct seq_file *m, int cpu);
 extern void init_cfs_rq(struct cfs_rq *cfs_rq);
 extern void init_rt_rq(struct rt_rq *rt_rq);
 extern void init_dl_rq(struct dl_rq *dl_rq);
-
+extern void init_llf_rq(struct llf_rq * dl_rq)
 extern void cfs_bandwidth_usage_inc(void);
 extern void cfs_bandwidth_usage_dec(void);
 

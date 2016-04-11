@@ -684,6 +684,7 @@ static void update_curr_dl(struct rq *rq)
 	sched_rt_avg_update(rq, delta_exec);
 
 	dl_se->runtime -= dl_se->dl_yielded ? 0 : delta_exec;
+	
 	if (dl_runtime_exceeded(rq, dl_se)) {
 		dl_se->dl_throttled = 1;
 		__dequeue_task_dl(rq, curr, 0);
@@ -693,7 +694,10 @@ static void update_curr_dl(struct rq *rq)
 		if (!is_leftmost(curr, &rq->dl))
 			resched_curr(rq);
 	}
+	/////////////////////////////////////////////
 
+	
+/////////////////////////////////////////////////
 	/*
 	 * Because -- for now -- we share the rt bandwidth, we need to
 	 * account our runtime there too, otherwise actual rt tasks
@@ -1777,7 +1781,7 @@ static void prio_changed_dl(struct rq *rq, struct task_struct *p,
 }
 
 const struct sched_class dl_sched_class = {
-	.next			= &rt_sched_class,
+	.next			= &llf_sched_class,
 	.enqueue_task		= enqueue_task_dl,
 	.dequeue_task		= dequeue_task_dl,
 	.yield_task		= yield_task_dl,

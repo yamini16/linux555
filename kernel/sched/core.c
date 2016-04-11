@@ -3279,11 +3279,15 @@ static void __setscheduler_params(struct task_struct *p,
 	int policy = attr->sched_policy;
 
 	if (policy == SETPARAM_POLICY)
+		//if attr->sched_policy == -1 then policy = task policy
 		policy = p->policy;
-
+	//task structure policy = policy of attr if present else the same
 	p->policy = policy;
 
-	if (dl_policy(policy))
+	if (policy==7) //if policy == llf
+		__setparam_dl(p, attr);
+
+	else if (dl_policy(policy))
 		__setparam_dl(p, attr);
 	else if (fair_policy(policy))
 		p->static_prio = NICE_TO_PRIO(attr->sched_nice);
@@ -3312,11 +3316,13 @@ static void __setscheduler(struct rq *rq, struct task_struct *p,
 		p->prio = rt_mutex_get_effective_prio(p, normal_prio(p));
 	else
 		p->prio = normal_prio(p);
-	//if (sched_attr->policy==LLF_POLICY) might have to check the variable names
-		//p->sched_class = &llf_sched_class;
-
-	if (dl_prio(p->prio))
+	//Assuming that sched_attr is already corrseponding to the correct policy
+	if (p->policy == SCHED_LLF)
+		p->sched_class = &llf_sched_class;
+	else if (dl_prio(p->prio))
 		p->sched_class = &dl_sched_class;
+	//else if (llf_prio(p->prio))
+		//p->sched_class = &llf_sched_class;
 	else if (rt_prio(p->prio))
 		p->sched_class = &rt_sched_class;
 	else
@@ -3432,7 +3438,7 @@ recheck:
 		if (policy != SCHED_DEADLINE &&
 				policy != SCHED_FIFO && policy != SCHED_RR &&
 				policy != SCHED_NORMAL && policy != SCHED_BATCH &&
-				policy != SCHED_IDLE)
+				policy != SCHED_IDLE && policy != SCHED_LLF)
 			return -EINVAL;
 	}
 
@@ -3536,6 +3542,9 @@ recheck:
 			goto change;
 		if (dl_policy(policy) && dl_param_changed(p, attr))
 			goto change;
+//Write for LLF
+		if (llf_policy(policy) && dl_param_changed(p, attr))
+					goto change;
 
 		p->sched_reset_on_fork = reset_on_fork;
 		task_rq_unlock(rq, p, &flags);
@@ -7062,6 +7071,7 @@ void __init sched_init_smp(void)
 
 	init_sched_rt_class();
 	init_sched_dl_class();
+	init_sched_llf_class();
 }
 #else
 void __init sched_init_smp(void)
@@ -7161,7 +7171,7 @@ void __init sched_init(void)
 		init_cfs_rq(&rq->cfs);
 		init_rt_rq(&rq->rt);
 		init_dl_rq(&rq->dl);
-		//init_llf_rq(&rq->llf);
+		init_llf_rq(&rq->llf);
 #ifdef CONFIG_FAIR_GROUP_SCHED
 		root_task_group.shares = ROOT_TASK_GROUP_LOAD;
 		INIT_LIST_HEAD(&rq->leaf_cfs_rq_list);

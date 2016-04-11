@@ -1236,14 +1236,16 @@ struct sched_dl_entity {
 	u64 dl_deadline;	/* relative deadline of each instance	*/
 	u64 dl_period;		/* separation of two instances (period) */
 	u64 dl_bw;		/* dl_runtime / dl_deadline		*/
-
+	
 	/*
 	 * Actual scheduling parameters. Initialized with the values above,
 	 * they are continously updated during task execution. Note that
 	 * the remaining runtime could be < 0 in case we are in overrun.
 	 */
 	s64 runtime;		/* remaining runtime for this instance	*/
-	u64 deadline;		/* absolute deadline for this instance	*/
+	u64 deadline;	
+	u64 laxity;			/*Laxity for LLF*/
+	/* absolute deadline for this instance	*/
 	unsigned int flags;	/* specifying the scheduler behaviour	*/
 
 	/*
@@ -1364,7 +1366,7 @@ struct task_struct {
 #ifdef CONFIG_CGROUP_SCHED
 	struct task_group *sched_task_group;
 #endif
-	struct sched_dl_entity dl;
+	struct sched_dl_entity dl;				//--------------------Main entity
 	//struct sched_llf_entity llf;
 
 #ifdef CONFIG_PREEMPT_NOTIFIERS
